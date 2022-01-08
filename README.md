@@ -5,8 +5,8 @@ Measure temperature, humidity, atmospheric pressure, and CO2 concentration using
 Prepare below devices and connect them to Atom Lite.
 
 - [ENV III sensor](https://docs.m5stack.com/en/unit/envIII) for temperature, humidity, and pressure measurement.
-- [TVOC/eCO2](https://docs.m5stack.com/en/unit/tvoc) for CO2 measurement.
-- [HUB](https://docs.m5stack.com/en/unit/hub) to expand single port into three ports. 
+- [TVOC/eCO2 sensor](https://docs.m5stack.com/en/unit/tvoc) for CO2 measurement.
+- [HUB](https://docs.m5stack.com/en/unit/hub) to expand single port into three. 
 
 ## How to use
 Specify below configuration depending on your environment, then upload the program to your device.
