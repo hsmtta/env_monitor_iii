@@ -9,7 +9,8 @@
 #define WIFI_PASSWD "passwd"
 
 // Measurement interval in second
-#define INTERVAL 180
+#define INTERVAL 9
+#define WINDOW 20
 
 // Ambient
 #define IS_USE_AMBIENT true
@@ -73,8 +74,17 @@ void setup()
     Serial.println("Set up finished!!");
 }
 
+float temperature_tot = 0;
+float humidity_tot = 0;
+float pressure_tot = 0;
+float eco2_tot = 0;
+float tvoc_tot = 0;
+int count = 0;
+
 void loop()
 {
+    count++;
+
     // Measure temp and humidity
     has_temp_sensor = sht3x.get() == 0;
     if (has_temp_sensor)
@@ -87,8 +97,8 @@ void loop()
         Serial.print(humidity);
         Serial.print("\n");
 
-        ambient.set(1, temperature);
-        ambient.set(2, humidity);
+        temperature_tot += temperature;
+        humidity_tot += humidity;
 
         // Set the absolute humidity to enable the humditiy compensation for the air quality signals
         if (has_co2_sensor)
@@ -102,7 +112,7 @@ void loop()
         Serial.print(pressure / 100);
         Serial.print("\n");
 
-        ambient.set(3, pressure / 100);
+        pressure_tot += pressure / 100;
     }
 
     // Measure air quality
@@ -115,14 +125,31 @@ void loop()
         Serial.print(sgp.eCO2);
         Serial.print(" ppm\n");
 
-        ambient.set(4, sgp.TVOC);
-        ambient.set(5, sgp.eCO2);
+        tvoc_tot += sgp.TVOC;
+        eco2_tot += sgp.eCO2;
     }
 
-    if (IS_USE_AMBIENT)
+    if (IS_USE_AMBIENT && count == WINDOW)
     {
-        if (!ambient.send())
-            Serial.println("Failed to send measurement to ambient server");
+        ambient.set(1, temperature_tot / count);
+        ambient.set(2, humidity_tot / count);
+        ambient.set(3, pressure_tot / count);
+        ambient.set(4, tvoc_tot / count);
+        ambient.set(5, eco2_tot / count);
+        
+        count = 0;
+        temperature_tot = 0;
+        humidity_tot = 0;
+        pressure_tot = 0;
+        tvoc_tot = 0;
+        eco2_tot = 0;
+
+        if (!ambient.send()){
+            Serial.println("Failed to send the measurements to the ambient server");
+        }
+        else {
+            Serial.println("Push the measurements to the ambient server"); 
+        }
     }
     delay(INTERVAL * 1000);
 }
