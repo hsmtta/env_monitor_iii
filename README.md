@@ -17,7 +17,8 @@ Specify below configuration depending on your environment, then upload the progr
 #define WIFI_PASSWD "passwd"
 
 // Measurement interval in second
-#define INTERVAL 180
+#define INTERVAL 9
+#define WINDOW 20
 
 // Ambient
 #define IS_USE_AMBIENT true
