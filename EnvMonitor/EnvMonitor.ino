@@ -24,6 +24,50 @@ QMP6988 qmp6988;
 WiFiClient client;
 Ambient ambient;
 
+enum state
+{
+    Normal,
+    CO2Caution,
+    CO2Warning,
+    UploadFailed,
+};
+
+uint8_t DisBuff[2 + 5 * 5 * 3]; // Used to store RGB color values.
+
+void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
+{
+    // Set the colors of LED, and save the relevant data to DisBuff[].
+    DisBuff[0] = 0x05;
+    DisBuff[1] = 0x05;
+    for (int i = 0; i < 25; i++)
+    {
+        DisBuff[2 + i * 3 + 0] = Gdata;
+        DisBuff[2 + i * 3 + 1] = Rdata;
+        DisBuff[2 + i * 3 + 2] = Bdata;
+    }
+}
+
+void setIndicator(state s)
+{
+    if (s == state::Normal)
+    {
+        setBuff(0x00, 0x00, 0x00); // Turned off
+    }
+    else if (s == state::CO2Caution)
+    {
+        setBuff(0x40, 0x10, 0x00); // Yellow
+    }
+    else if (s == state::CO2Warning)
+    {
+        setBuff(0x40, 0x00, 0x00); // Red
+    }
+    else if (s == state::UploadFailed)
+    {
+        setBuff(0x40, 0x00, 0x10); // Pink
+    }
+    M5.dis.displaybuff(DisBuff); // Display the DisBuff color on the LED.
+}
+
 uint32_t getAbsoluteHumidity(float temperature, float humidity)
 {
     // approximation formula from Sensirion SGP30 Driver Integration chapter 3.15
@@ -35,6 +79,8 @@ uint32_t getAbsoluteHumidity(float temperature, float humidity)
 bool has_temp_sensor = false;
 bool has_pressure_sensor = false;
 bool has_co2_sensor = false;
+
+state s;
 
 void setup()
 {
@@ -71,6 +117,7 @@ void setup()
 
     ambient.begin(CHANNELID, WRITEKEY, &client);
 
+    setIndicator(state::Normal);
     Serial.println("Set up finished!!");
 }
 
@@ -136,7 +183,24 @@ void loop()
         ambient.set(3, pressure_tot / count);
         ambient.set(4, tvoc_tot / count);
         ambient.set(5, eco2_tot / count);
-        
+
+        if (s == state::UploadFailed)
+        {
+            // Keep the indicator
+        }
+        else if (eco2_tot / count > 1500)
+        {
+            setIndicator(state::CO2Warning);
+        }
+        else if (eco2_tot / count > 1000)
+        {
+            setIndicator(state::CO2Caution);
+        }
+        else
+        {
+            setIndicator(state::Normal);
+        }
+
         count = 0;
         temperature_tot = 0;
         humidity_tot = 0;
@@ -146,9 +210,11 @@ void loop()
 
         if (!ambient.send()){
             Serial.println("Failed to send the measurements to the ambient server");
+            setIndicator(state::UploadFailed);
         }
         else {
             Serial.println("Push the measurements to the ambient server"); 
+            if (s == state::UploadFailed) setIndicator(state::Normal);
         }
     }
     delay(INTERVAL * 1000);
