@@ -35,7 +35,7 @@ enum state
 
 uint8_t DisBuff[2 + 5 * 5 * 3]; // Used to store RGB color values.
 
-void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
+void setBuff(const uint8_t Rdata, const uint8_t Gdata, const uint8_t Bdata)
 {
     // Set the colors of LED, and save the relevant data to DisBuff[].
     DisBuff[0] = 0x05;
@@ -48,7 +48,7 @@ void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
     }
 }
 
-void setIndicator(state s)
+void setIndicator(const state s)
 {
     if (s == state::Starting)
     {
@@ -73,7 +73,7 @@ void setIndicator(state s)
     M5.dis.displaybuff(DisBuff); // Display the DisBuff color on the LED.
 }
 
-uint32_t getAbsoluteHumidity(float temperature, float humidity)
+uint32_t getAbsoluteHumidity(const float temperature, const float humidity)
 {
     // approximation formula from Sensirion SGP30 Driver Integration chapter 3.15
     const float absoluteHumidity = 216.7f * ((humidity / 100.0f) * 6.112f * exp((17.62f * temperature) / (243.12f + temperature)) / (273.15f + temperature)); // [g/m^3]
