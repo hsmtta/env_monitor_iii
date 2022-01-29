@@ -26,6 +26,7 @@ Ambient ambient;
 
 enum state
 {
+    Starting, 
     Normal,
     CO2Caution,
     CO2Warning,
@@ -49,7 +50,11 @@ void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
 
 void setIndicator(state s)
 {
-    if (s == state::Normal)
+    if (s == state::Starting)
+    {
+        setBuff(0x00, 0x40, 0x00); // Green
+    }
+    else if (s == state::Normal)
     {
         setBuff(0x00, 0x00, 0x00); // Turned off
     }
@@ -85,6 +90,7 @@ state s;
 void setup()
 {
     M5.begin(true, true, true);
+    setIndicator(state::Starting);
 
     while (!Serial) // Wait for serial console to open.
     {
